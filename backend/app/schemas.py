@@ -19,6 +19,11 @@ class HabitRead(BaseModel):
     type: Optional[str] = None
 
 
+class HabitUpdate(BaseModel):
+    name: Optional[str] = None
+    type: Optional[str] = None
+
+
 class LogCreate(BaseModel):
     habit_id: int
     date: date_type
@@ -39,6 +44,18 @@ class LogRead(BaseModel):
     habit_id: int
     date: date_type
     completed: bool
+    lessons_completed: Optional[int] = None
+    pages_read: Optional[int] = None
+    exercise_type: Optional[str] = None
+    weight: Optional[int] = None
+    reps: Optional[int] = None
+    sets: Optional[int] = None
+    miles: Optional[Decimal] = None
+
+
+class LogUpdate(BaseModel):
+    date: Optional[date_type] = None
+    completed: Optional[bool] = None
     lessons_completed: Optional[int] = None
     pages_read: Optional[int] = None
     exercise_type: Optional[str] = None

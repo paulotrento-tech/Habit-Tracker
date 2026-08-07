@@ -55,3 +55,25 @@ def delete_log(
     db.delete(log)
     db.commit()
     return None
+
+@router.patch("/{log_id}", response_model=schemas.LogRead)
+def update_log(
+    log_id: int,
+    log_in: schemas.LogUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    log = (
+        db.query(models.Log)
+        .filter(models.Log.id == log_id, models.Log.user_id == current_user.id)
+        .first()
+    )
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+
+    for field, value in log_in.model_dump(exclude_unset=True).items():
+        setattr(log, field, value)
+
+    db.commit()
+    db.refresh(log)
+    return log

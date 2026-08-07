@@ -46,3 +46,25 @@ def delete_habit(
     db.delete(habit)
     db.commit()
     return None
+
+@router.patch("/{habit_id}", response_model=schemas.HabitRead)
+def update_habit(
+    habit_id: int,
+    habit_in: schemas.HabitUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    habit = (
+        db.query(models.Habit)
+        .filter(models.Habit.id == habit_id, models.Habit.user_id == current_user.id)
+        .first()
+    )
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    for field, value in habit_in.model_dump(exclude_unset=True).items():
+        setattr(habit, field, value)
+
+    db.commit()
+    db.refresh(habit)
+    return habit
