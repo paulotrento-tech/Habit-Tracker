@@ -1,10 +1,8 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
 from datetime import date as date_type
 from decimal import Decimal
-
-from pydantic import EmailStr
 
 class HabitCreate(BaseModel):
     name: str
@@ -67,7 +65,7 @@ class LogUpdate(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8)
 
 
 class UserRead(BaseModel):
