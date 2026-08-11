@@ -68,3 +68,18 @@ def update_habit(
     db.commit()
     db.refresh(habit)
     return habit
+
+@router.get("/{habit_id}", response_model=schemas.HabitRead)
+def get_habit(
+    habit_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    habit = (
+        db.query(models.Habit)
+        .filter(models.Habit.id == habit_id, models.Habit.user_id == current_user.id)
+        .first()
+    )
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return habit
