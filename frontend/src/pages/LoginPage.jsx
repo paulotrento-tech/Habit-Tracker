@@ -25,7 +25,7 @@ function LoginPage() {
     formBody.append("username", email);
     formBody.append("password", password);
 
-    fetch("http://127.0.0.1:8000/auth/login", {
+    fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: formBody,
@@ -46,7 +46,7 @@ function LoginPage() {
     setError("");
 
     if (isSignup) {
-      fetch("http://127.0.0.1:8000/auth/signup", {
+      fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

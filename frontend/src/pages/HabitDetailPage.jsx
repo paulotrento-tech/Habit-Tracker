@@ -43,7 +43,7 @@ function HabitDetailPage() {
   }
 
   function fetchHabit() {
-    fetch(`http://127.0.0.1:8000/habits/${habitId}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
@@ -55,7 +55,7 @@ function HabitDetailPage() {
   }
 
   function fetchLogs() {
-    fetch(`http://127.0.0.1:8000/logs?habit_id=${habitId}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/logs?habit_id=${habitId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
@@ -96,7 +96,7 @@ function HabitDetailPage() {
     const confirmed = window.confirm("Delete this log entry?");
     if (!confirmed) return;
 
-    fetch(`http://127.0.0.1:8000/logs/${logId}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/logs/${logId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     }).then((response) => {
@@ -110,7 +110,7 @@ function HabitDetailPage() {
     event.preventDefault();
     setHabitError("");
 
-    fetch(`http://127.0.0.1:8000/habits/${habitId}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -131,7 +131,7 @@ function HabitDetailPage() {
     const confirmed = window.confirm(`Delete "${habit.name}" and all its log entries?`);
     if (!confirmed) return;
 
-    fetch(`http://127.0.0.1:8000/habits/${habitId}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     }).then((response) => {
@@ -159,7 +159,7 @@ function HabitDetailPage() {
     if (sets !== "") payload.sets = Number(sets);
     if (miles !== "") payload.miles = Number(miles);
 
-    fetch("http://127.0.0.1:8000/logs", {
+    fetch(`${import.meta.env.VITE_API_URL}/logs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

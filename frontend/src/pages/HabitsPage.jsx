@@ -7,7 +7,7 @@ function HabitsPage() {
   const [habits, setHabits] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/habits", {
+    fetch(`${import.meta.env.VITE_API_URL}/habits`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())

@@ -14,7 +14,7 @@ function AddHabitPage() {
     event.preventDefault();
     setError("");
 
-    fetch("http://127.0.0.1:8000/habits", {
+    fetch(`${import.meta.env.VITE_API_URL}/habits`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
