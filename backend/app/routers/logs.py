@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -11,10 +11,14 @@ router = APIRouter(prefix="/logs", tags=["logs"])
 
 @router.get("", response_model=List[schemas.LogRead])
 def list_logs(
+    habit_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    return db.query(models.Log).filter(models.Log.user_id == current_user.id).all()
+    query = db.query(models.Log).filter(models.Log.user_id == current_user.id)
+    if habit_id is not None:
+        query = query.filter(models.Log.habit_id == habit_id)
+    return query.order_by(models.Log.date.desc()).all()
 
 
 @router.post("", response_model=schemas.LogRead)
