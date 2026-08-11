@@ -24,7 +24,7 @@ class Habit(Base):
     type = Column(String(50))
 
     owner = relationship("User", back_populates="habits")
-    logs = relationship("Log", back_populates="habit")
+    logs = relationship("Log", back_populates="habit", cascade="all, delete-orphan")
 
 
 class Log(Base):

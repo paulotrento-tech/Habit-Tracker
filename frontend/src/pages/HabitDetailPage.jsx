@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 function HabitDetailPage() {
   const { habitId } = useParams();
   const { token } = useAuth();
+
+  const navigate = useNavigate();
+
+  const [isEditingHabit, setIsEditingHabit] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState("");
+  const [habitError, setHabitError] = useState("");
 
   const [habit, setHabit] = useState(null);
   const [logs, setLogs] = useState([]);
@@ -40,7 +47,11 @@ function HabitDetailPage() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
-      .then((data) => setHabit(data));
+      .then((data) => {
+        setHabit(data);
+        setEditName(data.name);
+        setEditType(data.type || "");
+      });
   }
 
   function fetchLogs() {
@@ -79,6 +90,55 @@ function HabitDetailPage() {
     }
 
     return streak;
+  }
+
+  function handleDeleteLog(logId) {
+    const confirmed = window.confirm("Delete this log entry?");
+    if (!confirmed) return;
+
+    fetch(`http://127.0.0.1:8000/logs/${logId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((response) => {
+      if (response.ok) {
+        fetchLogs();
+      }
+    });
+  }
+
+  function handleUpdateHabit(event) {
+    event.preventDefault();
+    setHabitError("");
+
+    fetch(`http://127.0.0.1:8000/habits/${habitId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name: editName, type: editType }),
+    }).then((response) => {
+      if (!response.ok) {
+        response.json().then((data) => setHabitError(data.detail || "Could not update habit"));
+        return;
+      }
+      setIsEditingHabit(false);
+      fetchHabit();
+    });
+  }
+
+  function handleDeleteHabit() {
+    const confirmed = window.confirm(`Delete "${habit.name}" and all its log entries?`);
+    if (!confirmed) return;
+
+    fetch(`http://127.0.0.1:8000/habits/${habitId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((response) => {
+      if (response.ok) {
+        navigate("/habits");
+      }
+    });
   }
 
   function handleLogSubmit(event) {
@@ -132,9 +192,34 @@ function HabitDetailPage() {
 
   return (
     <div>
-      <h2>
-        {habit.name} ({habit.type})
-      </h2>
+      {isEditingHabit ? (
+        <form onSubmit={handleUpdateHabit}>
+            <input
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            required
+            />
+            <input
+            type="text"
+            value={editType}
+            onChange={(e) => setEditType(e.target.value)}
+            />
+            <button type="submit">Save</button>
+            <button type="button" onClick={() => setIsEditingHabit(false)}>
+            Cancel
+            </button>
+        </form>
+      ) : (
+        <div>
+            <h2>
+            {habit.name} ({habit.type})
+            </h2>
+            <button onClick={() => setIsEditingHabit(true)}>Edit</button>
+            <button onClick={handleDeleteHabit}>Delete</button>
+        </div>
+      )}
+      {habitError && <p style={{ color: "red" }}>{habitError}</p>}
       <p>Streak: {calculateStreak()} days</p>
 
       <h3>Add a Log Entry</h3>
@@ -199,11 +284,12 @@ function HabitDetailPage() {
 
       <h3>Log Entries</h3>
       <ul>
-      {sortedLogs.map((log) => (
+        {sortedLogs.map((log) => (
           <li key={log.id}>
-          {log.date} — completed: {log.completed ? "yes" : "no"} — {renderLogDetails(log)}
+          {log.date} — completed: {log.completed ? "yes" : "no"} — {renderLogDetails(log)}{" "}
+          <button onClick={() => handleDeleteLog(log.id)}>Delete</button>
           </li>
-      ))}
+        ))}
       </ul>
     </div>
   );
