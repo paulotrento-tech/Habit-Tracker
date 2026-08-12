@@ -284,12 +284,16 @@ function HabitDetailPage() {
 
       <h3>Log Entries</h3>
       <ul>
-        {sortedLogs.map((log) => (
-          <li key={log.id}>
-          {log.date} — completed: {log.completed ? "yes" : "no"} — {renderLogDetails(log)}{" "}
-          <button onClick={() => handleDeleteLog(log.id)}>Delete</button>
-          </li>
-        ))}
+        {sortedLogs.map((log) => {
+          const details = renderLogDetails(log);
+          return (
+            <li key={log.id}>
+              {log.date} — completed: {log.completed ? "yes" : "no"}
+              {details && ` — ${details}`}{" "}
+              <button onClick={() => handleDeleteLog(log.id)}>Delete</button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
