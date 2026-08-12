@@ -21,46 +21,46 @@ A full-stack web app for tracking daily habits, built to replace a Google Sheets
 
 ## Project Structure
 
-habit-tracker/
-backend/
-app/
-main.py FastAPI app + CORS
-database.py DB connection
-models.py SQLAlchemy models (User, Habit, Log)
-schemas.py Pydantic request/response schemas
-auth.py Password hashing + JWT
-dependencies.py Shared DB session + current-user dependency
-routers/ auth, habits, logs endpoints
-schema.sql Raw SQL table definitions
-requirements.txt
-frontend/
-src/
-pages/ LoginPage, HabitsPage, AddHabitPage, HabitDetailPage
-AuthContext.jsx Shared login state
-Layout.jsx Shared header/nav
-RequireAuth.jsx Route protection
+- habit-tracker/
+- backend/
+- app/
+- main.py FastAPI app + CORS
+- database.py DB connection
+- models.py SQLAlchemy models (User, Habit, Log)
+- schemas.py Pydantic request/response schemas
+- auth.py Password hashing + JWT
+- dependencies.py Shared DB session + current-user dependency
+- routers/ auth, habits, logs endpoints
+- schema.sql Raw SQL table definitions
+- requirements.txt
+- frontend/
+- src/
+- pages/ LoginPage, HabitsPage, AddHabitPage, HabitDetailPage
+- AuthContext.jsx Shared login state
+- Layout.jsx Shared header/nav
+- RequireAuth.jsx Route protection
 
 ## Local Development
 
 ### Backend
 
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+- cd backend
+- python -m venv venv
+- .\venv\Scripts\Activate.ps1
+- pip install -r requirements.txt
 
 create a .env file with DATABASE_URL and SECRET_KEY
 
-uvicorn app.main:app --reload
+- uvicorn app.main:app --reload
 
 ### Frontend
 
-cd frontend
-npm install
+- cd frontend
+- npm install
 
 create a .env.local file with VITE_API_URL=http://127.0.0.1:8000
 
-npm run dev
+- npm run dev
 
 ## Deployment
 
