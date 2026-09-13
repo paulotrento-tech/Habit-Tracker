@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../AuthContext";
+import { useApiFetch } from "../useApiFetch";
 
 function AddHabitPage() {
-  const { token } = useAuth();
+  const apiFetch = useApiFetch();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -14,14 +14,12 @@ function AddHabitPage() {
     event.preventDefault();
     setError("");
 
-    fetch(`${import.meta.env.VITE_API_URL}/habits`, {
+    apiFetch(`${import.meta.env.VITE_API_URL}/habits`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, type }),
     }).then((response) => {
+      if (!response) return;
       if (!response.ok) {
         response.json().then((data) => setError(data.detail || "Could not create habit"));
         return;

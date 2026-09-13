@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import { useApiFetch } from "../useApiFetch";
 
 function HabitDetailPage() {
   const { habitId } = useParams();
   const { token } = useAuth();
+  const apiFetch = useApiFetch();
 
   const navigate = useNavigate();
 
@@ -43,11 +45,13 @@ function HabitDetailPage() {
   }
 
   function fetchHabit() {
-    fetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((response) => response.json())
+    apiFetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`)
+      .then((response) => {
+        if (!response) return;
+        return response.json();
+      })
       .then((data) => {
+        if (!data) return;
         setHabit(data);
         setEditName(data.name);
         setEditType(data.type || "");
@@ -55,16 +59,20 @@ function HabitDetailPage() {
   }
 
   function fetchLogs() {
-    fetch(`${import.meta.env.VITE_API_URL}/logs?habit_id=${habitId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((response) => response.json())
-      .then((data) => setLogs(data));
+    apiFetch(`${import.meta.env.VITE_API_URL}/logs?habit_id=${habitId}`)
+      .then((response) => {
+        if (!response) return;
+        return response.json();
+      })
+      .then((data) => {
+        if (data) setLogs(data);
+      });
   }
 
   useEffect(() => {
     fetchHabit();
     fetchLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [habitId, token]);
 
   function calculateStreak() {
@@ -96,11 +104,10 @@ function HabitDetailPage() {
     const confirmed = window.confirm("Delete this log entry?");
     if (!confirmed) return;
 
-    fetch(`${import.meta.env.VITE_API_URL}/logs/${logId}`, {
+    apiFetch(`${import.meta.env.VITE_API_URL}/logs/${logId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     }).then((response) => {
-      if (response.ok) {
+      if (response && response.ok) {
         fetchLogs();
       }
     });
@@ -110,14 +117,12 @@ function HabitDetailPage() {
     event.preventDefault();
     setHabitError("");
 
-    fetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
+    apiFetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: editName, type: editType }),
     }).then((response) => {
+      if (!response) return;
       if (!response.ok) {
         response.json().then((data) => setHabitError(data.detail || "Could not update habit"));
         return;
@@ -131,11 +136,10 @@ function HabitDetailPage() {
     const confirmed = window.confirm(`Delete "${habit.name}" and all its log entries?`);
     if (!confirmed) return;
 
-    fetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
+    apiFetch(`${import.meta.env.VITE_API_URL}/habits/${habitId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     }).then((response) => {
-      if (response.ok) {
+      if (response && response.ok) {
         navigate("/habits");
       }
     });
@@ -159,14 +163,12 @@ function HabitDetailPage() {
     if (sets !== "") payload.sets = Number(sets);
     if (miles !== "") payload.miles = Number(miles);
 
-    fetch(`${import.meta.env.VITE_API_URL}/logs`, {
+    apiFetch(`${import.meta.env.VITE_API_URL}/logs`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }).then((response) => {
+      if (!response) return;
       if (!response.ok) {
         response.json().then((data) => setLogError(data.detail || "Could not create log"));
         return;
