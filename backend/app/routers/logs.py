@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..dependencies import get_db, get_current_user
+from ..field_validation import validate_custom_fields
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 
@@ -34,6 +35,9 @@ def create_log(
     )
     if not habit:
         raise HTTPException(status_code=404, detail="Habit not found")
+
+    field_defs = [schemas.FieldDefinition(**fd) for fd in habit.field_definitions]
+    validate_custom_fields(log_in.custom_fields, field_defs)
 
     log = models.Log(user_id=current_user.id, **log_in.model_dump())
     db.add(log)
@@ -75,7 +79,13 @@ def update_log(
     if not log:
         raise HTTPException(status_code=404, detail="Log not found")
 
-    for field, value in log_in.model_dump(exclude_unset=True).items():
+    update_data = log_in.model_dump(exclude_unset=True)
+    if "custom_fields" in update_data:
+        habit = db.query(models.Habit).filter(models.Habit.id == log.habit_id).first()
+        field_defs = [schemas.FieldDefinition(**fd) for fd in habit.field_definitions]
+        validate_custom_fields(update_data["custom_fields"], field_defs)
+
+    for field, value in update_data.items():
         setattr(log, field, value)
 
     db.commit()

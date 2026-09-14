@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -22,6 +23,7 @@ class Habit(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String(100), nullable=False)
     type = Column(String(50))
+    field_definitions = Column(JSONB, nullable=False, server_default="[]")
 
     owner = relationship("User", back_populates="habits")
     logs = relationship("Log", back_populates="habit", cascade="all, delete-orphan")
@@ -34,14 +36,7 @@ class Log(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     habit_id = Column(Integer, ForeignKey("habits.id"), nullable=False)
     date = Column(Date, nullable=False)
-    completed = Column(Boolean, default=False)
-    lessons_completed = Column(Integer)
-    pages_read = Column(Integer)
-    exercise_type = Column(String(100))
-    weight = Column(Integer)
-    reps = Column(Integer)
-    sets = Column(Integer)
-    miles = Column(Numeric)
+    custom_fields = Column(JSONB, nullable=False, server_default="{}")
 
     user = relationship("User", back_populates="logs")
     habit = relationship("Habit", back_populates="logs")

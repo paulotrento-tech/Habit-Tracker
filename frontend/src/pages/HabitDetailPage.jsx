@@ -19,29 +19,19 @@ function HabitDetailPage() {
   const [logs, setLogs] = useState([]);
 
   const [date, setDate] = useState("");
-  const [completed, setCompleted] = useState(false);
-  const [lessonsCompleted, setLessonsCompleted] = useState("");
-  const [pagesRead, setPagesRead] = useState("");
-  const [exerciseType, setExerciseType] = useState("");
-  const [weight, setWeight] = useState("");
-  const [reps, setReps] = useState("");
-  const [sets, setSets] = useState("");
-  const [miles, setMiles] = useState("");
+  const [fieldValues, setFieldValues] = useState({});
   const [logError, setLogError] = useState("");
 
   function renderLogDetails(log) {
-    switch (habit.type) {
-        case "duolingo":
-        return `${log.lessons_completed ?? 0} lessons`;
-        case "reading":
-        return `${log.pages_read ?? 0} pages`;
-        case "exercise":
-        return `${log.exercise_type || "—"}, ${log.weight ?? 0} lbs, ${log.reps ?? 0} reps, ${log.sets ?? 0} sets`;
-        case "running":
-        return `${log.miles ?? 0} miles`;
-        default:
-        return "";
-    }
+    return habit.field_definitions
+      .map((fd) => {
+        const value = log.custom_fields?.[fd.name];
+        return value !== undefined && value !== null && value !== ""
+          ? `${fd.label}: ${value}`
+          : null;
+      })
+      .filter(Boolean)
+      .join(", ");
   }
 
   function fetchHabit() {
@@ -76,18 +66,14 @@ function HabitDetailPage() {
   }, [habitId, token]);
 
   function calculateStreak() {
-    const completedDates = [
-      ...new Set(logs.filter((log) => log.completed).map((log) => log.date)),
-    ]
-      .sort()
-      .reverse();
+    const logDates = [...new Set(logs.map((log) => log.date))].sort().reverse();
 
-    if (completedDates.length === 0) return 0;
+    if (logDates.length === 0) return 0;
 
     let streak = 1;
-    for (let i = 0; i < completedDates.length - 1; i++) {
-      const current = new Date(completedDates[i]);
-      const next = new Date(completedDates[i + 1]);
+    for (let i = 0; i < logDates.length - 1; i++) {
+      const current = new Date(logDates[i]);
+      const next = new Date(logDates[i + 1]);
       const dayDifference = (current - next) / (1000 * 60 * 60 * 24);
 
       if (dayDifference === 1) {
@@ -145,23 +131,28 @@ function HabitDetailPage() {
     });
   }
 
+  function handleFieldValueChange(fieldName, value) {
+    setFieldValues({ ...fieldValues, [fieldName]: value });
+  }
+
   function handleLogSubmit(event) {
     event.preventDefault();
     setLogError("");
 
+    const custom_fields = {};
+    for (const fd of habit.field_definitions) {
+      const raw = fieldValues[fd.name];
+      if (raw === undefined || raw === "") continue;
+      if (fd.type === "integer") custom_fields[fd.name] = parseInt(raw, 10);
+      else if (fd.type === "float") custom_fields[fd.name] = Number(raw);
+      else custom_fields[fd.name] = raw;
+    }
+
     const payload = {
       habit_id: Number(habitId),
       date: date,
-      completed: completed,
+      custom_fields,
     };
-
-    if (lessonsCompleted !== "") payload.lessons_completed = Number(lessonsCompleted);
-    if (pagesRead !== "") payload.pages_read = Number(pagesRead);
-    if (exerciseType !== "") payload.exercise_type = exerciseType;
-    if (weight !== "") payload.weight = Number(weight);
-    if (reps !== "") payload.reps = Number(reps);
-    if (sets !== "") payload.sets = Number(sets);
-    if (miles !== "") payload.miles = Number(miles);
 
     apiFetch(`${import.meta.env.VITE_API_URL}/logs`, {
       method: "POST",
@@ -174,14 +165,7 @@ function HabitDetailPage() {
         return;
       }
       setDate("");
-      setCompleted(false);
-      setLessonsCompleted("");
-      setPagesRead("");
-      setExerciseType("");
-      setWeight("");
-      setReps("");
-      setSets("");
-      setMiles("");
+      setFieldValues({});
       fetchLogs();
     });
   }
@@ -228,57 +212,16 @@ function HabitDetailPage() {
       <form onSubmit={handleLogSubmit}>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
 
-        <label>
+        {habit.field_definitions.map((fd) => (
           <input
-            type="checkbox"
-            checked={completed}
-            onChange={(e) => setCompleted(e.target.checked)}
+            key={fd.name}
+            type={fd.type === "text" ? "text" : "number"}
+            step={fd.type === "float" ? "any" : "1"}
+            placeholder={fd.label}
+            value={fieldValues[fd.name] ?? ""}
+            onChange={(e) => handleFieldValueChange(fd.name, e.target.value)}
           />
-          Completed
-        </label>
-
-        <input
-          type="number"
-          placeholder="Lessons completed"
-          value={lessonsCompleted}
-          onChange={(e) => setLessonsCompleted(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Pages read"
-          value={pagesRead}
-          onChange={(e) => setPagesRead(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Exercise type"
-          value={exerciseType}
-          onChange={(e) => setExerciseType(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Weight"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Reps"
-          value={reps}
-          onChange={(e) => setReps(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Sets"
-          value={sets}
-          onChange={(e) => setSets(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Miles"
-          value={miles}
-          onChange={(e) => setMiles(e.target.value)}
-        />
+        ))}
 
         <button type="submit">Add Log</button>
       </form>
@@ -290,7 +233,7 @@ function HabitDetailPage() {
           const details = renderLogDetails(log);
           return (
             <li key={log.id}>
-              {log.date} — completed: {log.completed ? "yes" : "no"}
+              {log.date}
               {details && ` — ${details}`}{" "}
               <button onClick={() => handleDeleteLog(log.id)}>Delete</button>
             </li>

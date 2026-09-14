@@ -23,7 +23,12 @@ def create_habit(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    habit = models.Habit(user_id=current_user.id, name=habit_in.name, type=habit_in.type)
+    habit = models.Habit(
+        user_id=current_user.id,
+        name=habit_in.name,
+        type=habit_in.type,
+        field_definitions=[fd.model_dump() for fd in habit_in.field_definitions],
+    )
     db.add(habit)
     db.commit()
     db.refresh(habit)
